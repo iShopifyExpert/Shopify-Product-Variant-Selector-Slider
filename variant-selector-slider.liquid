@@ -20,7 +20,7 @@
               {% endfor %}
               <div class="col-md-12">
                 <p style="color: #c39852">Once you're happy with your above selection, click add to bag below!</p>
-                {%- form 'product', product, class:'product-form' -%}{%- if product.variants.size > 1 -%}<select name="id" id="productSelect" style="display:none;">{%- for variant in product.variants -%}{%- if variant.available -%}<option{% if variant == product.selected_or_first_available_variant %} selected="selected"{% endif %} data-sku="{{ variant.sku }}" value="{{ variant.id }}">{{ variant.title }} - {{ variant.price | money_with_currency }}</option>{%- else -%}<option disabled="disabled">{{ variant.title }} - {{ 'products.product.sold_out' | t }}</option>{%- endif -%}{%- endfor -%}</select>{%- else -%}<input type="hidden" name="id" value="{{- product.selected_or_first_available_variant.id -}}" />{%- endif -%}<button type="submit" class="addcart hvr-float-shadow"><span id="productprice" class="money">{{ product.price | money }}</span> | <span id="addtocart">ADD TO BAG</span></button>{%- endform -%}
+                {%- form 'product', product, class:'product-form' -%}{%- if product.variants.size > 1 -%}<select name="id" id="productSelect" style="display:none;">{%- for variant in product.variants -%}{%- if variant.available -%}<option{% if variant == product.selected_or_first_available_variant %} selected="selected"{% endif %} data-sku="{{ variant.sku }}" value="{{ variant.id }}">{{ variant.title }} - {{ variant.price | money_with_currency }}</option>{%- else -%}<option disabled="disabled">{{ variant.title }} - {{ 'products.product.sold_out' | t }}</option>{%- endif -%}{%- endfor -%}</select>{%- else -%}<input type="hidden" name="id" value="{{- product.selected_or_first_available_variant.id -}}" />{%- endif -%}<button type="submit" class="addcart hvr-float-shadow"><span id="productprice" class="money">{{ product.price | money }}</span> | <span class="addtocart">ADD TO BAG</span></button>{%- endform -%}
               </div>
             </div>
           </div>
@@ -35,9 +35,9 @@
   var selectCallback = function(variant, selector) {
     if (variant) {
       if (variant.available) {
-        $('#addtocart').removeClass('disabled').removeAttr('disabled').html('Add to Cart');
+        $('.addtocart').removeClass('disabled').removeAttr('disabled').html('Add to Cart');
       } else {
-        $('#addtocart').html('Sold Out').addClass('disabled').attr('disabled', 'disabled');        
+        $('.addtocart').html('Sold Out').addClass('disabled').attr('disabled', 'disabled');        
       }
       if ( variant.compare_at_price > variant.price ) {
         $('#productprice').html('<span class="price on-sale">'+ Shopify.formatMoney(variant.price, "") +'</span>'+'&nbsp;<s class="compare-price">'+Shopify.formatMoney(variant.compare_at_price, "")+ '</s>');
@@ -45,7 +45,7 @@
         $('#productprice').html('<span class="price">'+ Shopify.formatMoney(variant.price, "") + '</span>' );
       }        
     } else {
-      $('#addtocart').html('Unavailable').addClass('disabled').attr('disabled', 'disabled');
+      $('.addtocart').html('Unavailable').addClass('disabled').attr('disabled', 'disabled');
     }
   };
   jQuery(function($) {
