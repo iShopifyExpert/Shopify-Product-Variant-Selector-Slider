@@ -1,0 +1,157 @@
+{%- assign product = all_products[handle] -%}{%- if product.title != blank -%}
+<section class="second-section">
+  <div class="container">
+    <div class="row">
+      <div class="col-md-12">
+        <div class="secondproduct-content">
+          <h4 class="lines">{{title}}</h4>
+          <h2>{{Subtitle}}</h2>
+          <div class="container-fluid">
+            <div class="row">
+              {% for product_option in product.options_with_values %}
+              <div class="col-md-4">
+                <div class="variants-slider" id="optionslider{{forloop.index}}">
+                  {% for value in product_option.values %}
+                  <img src="{{ value | handle | append: '.' | append: 'jpg' | asset_url }}" data-title="{{value}}" class="{% if product_option.selected_value == value %}default-selected{% endif %} img-responsive">
+                  {% endfor %}
+                </div>
+                <p>Select Your {{product_option.name}} : <span id="optionvalue{{forloop.index}}" class="optionvalue"></span></p>
+              </div>
+              {% endfor %}
+              <div class="col-md-12">
+                <p style="color: #c39852">{{Paragraph}}</p>
+                {%- form 'product', product, class:'product-form' -%}{%- if product.variants.size > 1 -%}<select name="id" id="productSelect" style="display:none;">{%- for variant in product.variants -%}{%- if variant.available -%}<option{% if variant == product.selected_or_first_available_variant %} selected="selected"{% endif %} data-sku="{{ variant.sku }}" value="{{ variant.id }}">{{ variant.title }} - {{ variant.price | money_with_currency }}</option>{%- else -%}<option disabled="disabled">{{ variant.title }} - {{ 'products.product.sold_out' | t }}</option>{%- endif -%}{%- endfor -%}</select>{%- else -%}<input type="hidden" name="id" value="{{- product.selected_or_first_available_variant.id -}}" />{%- endif -%}<button type="submit" class="addcart hvr-float-shadow"><span id="productprice" class="money">{{ product.price | money }}</span> | <span id="addtocart">ADD TO BAG</span></button>{%- endform -%}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>        
+        
+{{'option_selection.js' | shopify_asset_url | script_tag}}
+<script>
+  var selectCallback = function(variant, selector) {
+    if (variant) {
+      if (variant.available) {
+        $('#addtocart').html('Add to Cart'); $('.addcart').removeClass('disabled').removeAttr('disabled');
+      } else {
+        $('#addtocart').html('Sold Out'); $('.addcart').addClass('disabled').attr('disabled', 'disabled');        
+      }
+      if ( variant.compare_at_price > variant.price ) {
+        $('#productprice').html('<span class="price on-sale">'+ Shopify.formatMoney(variant.price, "") +'</span>'+'&nbsp;<s class="compare-price">'+Shopify.formatMoney(variant.compare_at_price, "")+ '</s>');
+      } else {
+        $('#productprice').html('<span class="price">'+ Shopify.formatMoney(variant.price, "") + '</span>' );
+      }        
+    } else {
+      $('#addtocart').html('Unavailable'); $('.addcart').addClass('disabled').attr('disabled', 'disabled');
+    }
+  };
+  jQuery(function($) {
+    new Shopify.OptionSelectors('productSelect', {
+      product: {{ product | json }},
+      onVariantSelected: selectCallback,
+      enableHistoryState: true
+    });
+    // Add label if only one product option and it isn't 'Title'. Could be 'Size'.
+    {% if product.options.size == 1 and product.options.first != 'Title' %}
+      $('.selector-wrapper:eq(0)').prepend('<label for="productSelect-option-0">{{ product.options.first | escape }}</label>');
+      $('.selector-wrapper:eq(0)').append('<div class="clearfix"></div>');
+    {% endif %}
+    // Hide selectors if we only have 1 variant and its title contains 'Default'.
+    {% if product.variants.size == 1 and product.variants.first.title contains 'Default' %}
+      $('.selector-wrapper').hide();
+    {% endif %}
+    $('.selector-wrapper').append('<div class="clearfix"></div>');
+  });
+</script>
+{{'slick.css' | asset_url | stylesheet_tag}}
+{{'slick-theme.css' | asset_url | stylesheet_tag}}
+{{'https://code.jquery.com/jquery-2.2.0.min.js' | script_tag}}
+<script src="{{'slick.js' | asset_url}}" defer=""></script>
+<script type="text/javascript">
+  $(document).on('ready', function() {
+    $('.variants-slider').slick({
+      slidesToShow: 1,
+      slidesToScroll: 1,
+      autoplay: false,
+      dots: false,
+      infinite: true,
+      arrows: true,
+      prevArrow:"<button type='button' class='codehouse-prev pull-left'><svg class='flickity-button-icon' viewBox='0 0 100 100'><path d='M 10,50 L 60,100 L 70,90 L 30,50  L 70,10 L 60,0 Z' class='arrow'></path></svg></button>",
+      nextArrow:"<button type='button' class='codehouse-next pull-right'><svg class='flickity-button-icon' viewBox='0 0 100 100'><path d='M 10,50 L 60,100 L 70,90 L 30,50  L 70,10 L 60,0 Z' class='arrow' transform='translate(100, 100) rotate(180)'></path></svg></button>",
+    });
+    {% for option in product.options %}{% assign option_index = forloop.index0 %}
+    $('#optionslider{{forloop.index}}').on('afterChange', function(event, slick, currentSlide){
+      $(slick.$slides).removeClass('selectedvariant');
+      $(slick.$slides[currentSlide]).addClass('selectedvariant');
+      $('#productSelect-option-{{option_index}}').val($('#optionslider{{forloop.index}} .selectedvariant img').data('title')).trigger('change');
+      $('#optionvalue{{forloop.index}}').text($('#optionslider{{forloop.index}} .selectedvariant img').data('title'));
+    });
+    {% endfor %}
+  });
+</script>
+
+<style>
+.selector-wrapper {
+  margin: 15px 0;
+  display: none;
+}
+
+.selector-wrapper label, .selector-wrapper option {
+  display: block;
+  width: 100%;
+}
+.selectedvariant img {
+    border: 6px solid #eec350;
+}
+.slick-arrow {
+    position: absolute;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    top: calc(50% - 25px);
+    border-radius: 100%;
+    visibility: visible;
+    background: transparent;
+    opacity: 1;
+    z-index: 1;
+}
+.slick-arrow:hover {
+    background: linear-gradient(20deg, #e8c543 20%, #a0791e 70%);
+}
+.variants-slider button {
+    outline: 0 !important;
+}
+.slick-arrow svg {
+    position: relative;
+    width: 15px;
+    height: 15px;
+    fill: #fff;
+    vertical-align: middle;
+}
+.codehouse-next {
+    right: 15px;
+}
+.codehouse-prev {
+    left: 15px;
+}
+.codehouse-next svg {
+    left: -1px;
+}
+
+.codehouse-prev svg {
+    left: 1px;
+}
+.variants-slider img ~ img {
+    display: none;
+}
+.optionvalue {
+    color: #b58b2c;
+    font-weight: 600;
+}
+</style>
+{%- endif -%}
